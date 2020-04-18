@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<!-- <script src="jquery-3.3.1.min.js"></script> -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="bfs.js"></script>
+<style>
+  #container{
+    width: 90vw;
+    height: 90vw;
+    position: absolute;
+    left: 5vw;
+  }
+  @media (orientation: landscape) {
+    #container{
+      width:90vh;
+      height:90vh;
+      left: calc(50vw - 45vh);
+    }
+  }
+  .square{
+    background-color: #9fba73;
+    float: left;
+    -webkit-transition: background-color 2s; /* Safari prior 6.1 */
+    transition: background-color 2s;
+  }
+  .square:hover{
+    opacity: 0.5;
+  }
+  .square.affected{
+    background-color: #15a4c3;
+  }
+  .square.attacked-default{
+    background-color: #000;
+  }
+  .square.attacked{
+    background-color: #ff5100;
+  }
+</style>
+<body>
+  <div id="container"></div>
+  <script>
+    var size = L;
+    var squaremargin = 10/size;
+    var squarewidth = 90/size;
+    var count = 0;
+    var lastStatus;
+    // var attackList = [];
+    //var cutoffs = [];
+
+    for(i=0;i<size;i++){
+      for(j=0;j<size;j++){
+        var sq = $("#container").append("<div class='square' index='"+count+"'></div>");
+        count++;
+      }
+    }
+    $(".square").css("width", squarewidth+"%");
+    $(".square").css("height", squarewidth+"%");
+    $(".square").css("margin", squaremargin/2+"%");
+    lastStatus = new Uint8Array(bp.N);
+    lastStatus.fill(100);
+    draw();
+
+    $(".square").click(function(){
+      var idx = $(this).attr("index");
+      idx = parseInt(idx,10);
+      if($(this).hasClass("attacked-default")){
+        $(this).removeClass("attacked-default");
+      }else{
+        $(this).addClass("attacked");
+      }
+      bp.toggle_index(idx);
+      draw();
+    });
+
+    function draw(){
+      bp.get_gcc_membership_vector();
+      for(i = 0; i<bp.status.length; i++){
+        if(bp.status[i] != lastStatus[i]){
+          if(bp.status[i] == 0){
+            $(".square[index='"+i.toString()+"']").removeClass("affected");
+            $(".square[index='"+i.toString()+"']").removeClass("attacked-default");
+            $(".square[index='"+i.toString()+"']").removeClass("attacked");
+          }
+          if(bp.status[i] == 1){
+            $(".square[index='"+i.toString()+"']").removeClass("attacked-default");
+            $(".square[index='"+i.toString()+"']").addClass("affected");
+            $(".square[index='"+i.toString()+"']").removeClass("attacked");
+          }else if(bp.status[i] == 2){
+            $(".square[index='"+i.toString()+"']").removeClass("affected");
+            $(".square[index='"+i.toString()+"']").addClass("attacked-default");
+          }
+        }
+      }
+      lastStatus = Uint8Array.from(bp.status);
+    }
+  </script>
+</body>
+</html>

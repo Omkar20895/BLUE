@@ -1,0 +1,6 @@
+gym_percolation/__pycache__
+gym_percolation/envs/__pycache__
+gym_percolation/.DS_Store
+experiments/*
+models/*
+.ipynb_checkpoints
