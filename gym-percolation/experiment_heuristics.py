@@ -100,7 +100,7 @@ if __name__ == "__main__":
     for i in range(0,4):
         p = 0.3
         # path to the model using which you want to pick actions
-        model_path = '/Users/omkarreddy/Desktop/RAWork/ProjectBlue/battle-perc-master/gym-percolation/models/iteration4/model_0.3_stacked_heuristic.sav'
+        model_path = './gym-percolation/models/iteration4/model_0.3_stacked_heuristic.sav'
         model = pickle.load(open(model_path, 'rb'))
 
         parameters = {'grid_size': (25,25), 'p':p, 'random': True, 'model':model}
@@ -127,5 +127,5 @@ if __name__ == "__main__":
 
         print("Writing to the json file...")
         #json.dump(json_data, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
-        slackbot.send_message(["Done with the experiments", "i = "+str(i)])
+        #slackbot.send_message(["Done with the experiments", "i = "+str(i)])
     print(avg_step)

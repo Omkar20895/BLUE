@@ -4,3 +4,4 @@ gym_percolation/.DS_Store
 experiments/*
 models/*
 .ipynb_checkpoints
+slackbot.py
