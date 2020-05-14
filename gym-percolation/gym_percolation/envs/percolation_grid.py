@@ -285,6 +285,7 @@ class GridMode0(Grid):
         self.probability = p
         self.zero_threshold = zero_thres
         self.game_mode = mode
+        self.maximum_blue_size = 0
 
         if seed == None:
             self.seed = str(uuid.uuid1())
@@ -350,8 +351,12 @@ class GridMode0(Grid):
         components = self.get_components()
 
         if self.MODES[self.game_mode] == 0:
+            if len(components) > 1:
+                self.maximum_blue_size = max(self.maximum_blue_size,len(components[1]))
+            switch_to_state = self.STATES['Empty'] if len(components[0]) > self.maximum_blue_size else self.STATES['Affected']
             for x, y in components[0]:
-                newStates[x,y] = self.STATES['Empty']
+                newStates[x,y] = switch_to_state
+
 
         return newStates, components
 
