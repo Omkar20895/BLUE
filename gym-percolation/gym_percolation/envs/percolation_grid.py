@@ -360,6 +360,11 @@ class GridMode0(Grid):
 
         return newStates, components
 
+    def fill_affected(self):
+        newStates, newComponents = self.get_gcc_membership()
+
+        return        
+
     def register_move(self, x, y):
         if self.states[x,y] != self.STATES['Empty']:
             return []

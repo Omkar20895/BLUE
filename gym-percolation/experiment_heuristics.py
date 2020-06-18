@@ -1,5 +1,6 @@
 import gym
 import gym_percolation
+import getopt, sys
 
 import json
 import random
@@ -7,6 +8,11 @@ import numpy as np
 import codecs
 import pickle
 import slackbot
+
+import seaborn as sns
+from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
+
 
 class ExperimentLogger(object):
 
@@ -22,17 +28,26 @@ class ExperimentLogger(object):
 def get_model_action(actionSpace, observation, model):
    
     maxi = 0
-    board_state = np.reshape(np.array(observation), (25, 25, 1))
+    board_state = np.reshape(np.array(observation), (5, 5, 1))
+    probs = []
     for action in actionSpace:
-        encoded_action = np.zeros((25, 25, 1)) 
+        encoded_action = np.zeros((5, 5, 1)) 
         encoded_action[action['x']][action['y']] = 1
         stacked_array = np.dstack((board_state, encoded_action))
         #pred = model.predict([np.reshape(np.array(observation),(1, 25, 25, 1)), np.reshape(encoded_action,(1, 25, 25, 1))])[0][0]
-        pred = model.predict(np.reshape(stacked_array, (1, 25, 25, 2)))
+        pred = model.predict(np.reshape(stacked_array, (1, 5, 5, 2)))
         action["prob"] = str(pred[0][0])
+        probs.append(pred[0][0])
         if pred[0][0] >= maxi:
             maxi  = pred[0][0]
             return_action = action
+    
+    rand = random.uniform(0, 1)
+    probs = np.array(probs)
+    probs = probs/probs.sum()
+    if rand <= 0.1:
+        return_action = np.random.choice(actionSpace, p=probs)
+
     return return_action, actionSpace
 
 def run_gym_environment(params):
@@ -60,9 +75,12 @@ def run_gym_environment(params):
             json_data.append(action_step)
         else:
             done = True
-    return json_data
 
-def calc_steps(data, n_experiments):
+    env.render()
+
+    return json_data, plt
+
+def calculate_par(data, n_experiments):
     secondary_steps = 0
 
     for key, value in data.items():
@@ -93,39 +111,70 @@ def calc_move_quality(data, avg_steps):
 if __name__ == "__main__":
 
     elogger = ExperimentLogger('experiments/experiment_connection-select.json')
+    short_options = "hm:f:"
+    long_options = ["help","random", "model"]
+    full_cmd_arguments = sys.argv
+
+    # Keep all but the first
+    argument_list = full_cmd_arguments[1:]
+
+    try:
+        arguments, values = getopt.getopt(argument_list, short_options, long_options)
+    except getopt.error as err:
+        # Output error, and return with an error code
+        print (str(err))
+        sys.exit(2)
+
+    if len(arguments) == 0:
+        print("Error: Missing required arguments -f (or) --file, please refer to help using -h")
+        exit()
+
+    rand = True
+    file_path = None 
+    for opt, val in arguments:
+        print(str(opt)+"  "+str(val))
+        if opt in ('-h', '--help'):
+            print("Arguments: ")
+            print("[optional] -h (or) --help: help menu")
+            print("[optional] -m (or) --model: model path from which we want to select actions")
+            print("[required] -f (or) --file: file path to store the generated data")
+            exit()
+        if opt in ('-f', '--file'):
+            file_path = val
+        if opt in ('-m', '--model'):
+            rand = False
+            model_path = val
+            model = pickle.load(open(model_path, 'rb'))
+
+    if file_path is None:
+        raise Exception("Missing -f (or) --file argument to store the generated data")
 
     #for p in [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]:
-    #for p in [0.3]:
     avg_step = []
-    for i in range(0,4):
+    for i in range(0, 1):
         p = 0.3
         # path to the model using which you want to pick actions
-        model_path = './gym-percolation/models/iteration4/model_0.3_stacked_heuristic.sav'
-        model = pickle.load(open(model_path, 'rb'))
+        #model_path = './mini_experiments/iteration11/model_exp.sav'
+        #model = pickle.load(open(model_path, 'rb'))
 
-        parameters = {'grid_size': (25,25), 'p':p, 'random': True, 'model':model}
-        nExperiment = 100
+        parameters = {'grid_size': (5,5), 'p':p, 'random': rand, 'model':model}
+        nExperiment = 500
         json_data = {}
         for r in range(nExperiment):
             try:
                 print('Creating gym [{}/{}]'.format(r, nExperiment))
-                results = run_gym_environment(parameters)
+                results, plt = run_gym_environment(parameters)
                 json_data[str(r)] = results
                 #elogger.addRecord({**parameters, **results})
             except Exception as e:
                 print(e)
-        #print(json_data.keys())
-        #print(json.dumps(json_data, indent=4, sort_keys=True))
-       
-        #file_path = './experiments/moveData/iteration1/'+str(p)+'.json' 
-        file_path = './experiments/moveData/iteration4/experiment_'+str(p)+'_new_heuristic_part2.json'
-        print("Calculating steps from win for each board state observation...")
-        json_data, avg_steps = calc_steps(json_data, nExperiment)
-        avg_step.append(avg_steps)
-        print("Calculating move quality for each step and board state observation pair...")
-        json_data = calc_move_quality(json_data, avg_steps)
 
-        print("Writing to the json file...")
-        #json.dump(json_data, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
-        #slackbot.send_message(["Done with the experiments", "i = "+str(i)])
-    print(avg_step)
+    #file_path = './mini_experiments/iteration12/data_exp_2.json'
+    print("Calculating steps from win for each board state observation...")
+    json_data, avg_steps = calculate_par(json_data, nExperiment)
+    avg_step.append(avg_steps)
+    print("Calculating move quality for each step and board state observation pair...")
+    json_data = calc_move_quality(json_data, avg_steps)
+    print("Writing to the json file...")
+    json.dump(json_data, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
+    #slackbot.send_message(["Done with the experiments", "i = "+str(i)])

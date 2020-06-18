@@ -29,7 +29,6 @@ class PercolationEnv(gym.Env):
         for i in range(self.grid_view.grid.states.shape[0]):
             for j in range(self.grid_view.grid.states.shape[1]):
                 if self.grid_view.grid.states[i,j] == self.grid_view.grid.STATES['Empty']:
-
                     # Get angle around the cell and look clusters by sorting them
                     angleDict = dict()
                     for m,n in [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1, -1), (0, -1), (1, -1)]:
@@ -103,7 +102,7 @@ class PercolationEnv(gym.Env):
         return self.grid_view.game_over
 
     def step(self, action):
-        self.state = self.grid_view.grid.states
+        self.state = self.grid_view.grid.states.copy()
         self.grid_view.grid.register_move(action['x'], action['y'])
 
         reward = 0
@@ -112,9 +111,14 @@ class PercolationEnv(gym.Env):
 
         return self.state, reward, done, info
  
-    def reset(self):
+    def reset(self, observation=np.array([])):
         self.grid_view.restart()
-        self.state = self.grid_view.grid.states # added by Omkar
+        self.grid_view.grid.fill_affected()
+        if observation.any():
+            self.state = observation
+            self.grid_view.grid.states = observation
+        else:
+            self.state = self.grid_view.grid.states # added by Omkar
         #self.state = np.zeros(2) changes made by Omkar
         self.steps_beyond_done = None
         self.done = False
@@ -125,8 +129,6 @@ class PercolationEnv(gym.Env):
             self.grid_view.quit_game()
 
         return self.grid_view.update(mode)
-
-        
 
 
 class PercolationEnvMode0(PercolationEnv):
