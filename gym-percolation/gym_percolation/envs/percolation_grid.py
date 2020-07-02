@@ -20,19 +20,20 @@ logger.addHandler(ch)
 class PercolationGrid:
 
     def __init__(self, game_name="Percolation Grid", seed_value=None, p=0.38, zero_thres=0.05,
-                 grid_size=(30, 30), screen_size=(600, 600), enable_render=True):
+                 grid_size=(30, 30), screen_size=(600, 600), enable_render=True, np_seed=None):
 
-        # PyGame configurations
-        pygame.init()
-        pygame.display.set_caption(game_name)
-        self.clock = pygame.time.Clock()
         self.__game_over = False
         self.__enable_render = enable_render
 
-        self.__grid = GridMode0(grid_size, p=p, zero_thres=zero_thres, seed=seed_value) # Update P value
+        self.__grid = GridMode0(grid_size, p=p, zero_thres=zero_thres, seed=seed_value, np_seed=np_seed) # Update P value
 
         self.grid_size = self.__grid.grid_size
         if self.__enable_render is True:
+            # PyGame configurations
+            pygame.init()
+            pygame.display.set_caption(game_name)
+            self.clock = pygame.time.Clock()
+
             # to show the right and bottom border
             self.screen = pygame.display.set_mode(screen_size)
             self.__screen_size = tuple(map(sum, zip(screen_size, (-1, -1))))
@@ -180,7 +181,7 @@ class Grid(object):
         '2': 2,
     }
 
-    def __init__(self, grid_size=(50,50), p=0.38, zero_thres=0.05, mode='0', seed=None):
+    def __init__(self, grid_size=(50,50), p=0.38, zero_thres=0.05, mode='0', seed=None, np_seed=None):
         self.grid_size = grid_size
         self.probability = p
         self.zero_threshold = zero_thres
@@ -190,6 +191,8 @@ class Grid(object):
             self.seed = str(uuid.uuid1())
         else:
             self.seed = seed
+
+        self.np_seed = None
         
         self.randomizer = random
         self.randomizer.seed(self.seed)
@@ -199,31 +202,42 @@ class Grid(object):
         self.visited = np.zeros(self.grid_size)
         self.groups = list()
 
-        self.make_randomized_alive()
+        self.make_randomized_alive(np_seed)
 
     def restart(self):
         self.states = np.ones(self.grid_size) * self.STATES['Empty']
         self.alive = np.ones(self.grid_size)
         self.visited = np.zeros(self.grid_size)
         self.groups = list()
-        self.make_randomized_alive()
+        self.make_randomized_alive(np_seed = self.np_seed)
 
     def make_all_alive(self):
         self.alive = np.ones(self.grid_size)
         self.states = np.ones(self.grid_size) * self.STATES['Empty']
 
-    def make_randomized_alive(self, p=None):
+    def make_randomized_alive(self, p=None, np_seed=None):
         if p == None:
             p = self.probability
 
+        if np_seed:
+            np.random.seed(np_seed)
+
+        size =  self.grid_size[0]*self.grid_size[1]
+        zeros = np.zeros(size)
+        proportion = size - int(p*size) 
+        zeros[:proportion] = 1
+        np.random.shuffle(zeros)
+        zeros = np.reshape(zeros, (self.grid_size[0], self.grid_size[1]))
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
-                self.alive[i,j] = 0 if self.randomizer.random() < p else 1
-                self.states[i,j] = self.STATES['Empty'] if self.alive[i,j] else self.STATES['Initially-Attacked']
+                #self.alive[i,j] = 0 if self.randomizer.random() < p else 1
+                #self.states[i,j] = self.STATES['Empty'] if self.alive[i,j] else self.STATES['Initially-Attacked']
+                self.states[i,j] = self.STATES['Empty'] if zeros[i,j] else self.STATES['Initially-Attacked']
         self.get_gcc_membership()
         logger.info('Grid with size {} created'.format(self.grid_size))
 
     def get_gcc_membership(self):
+        
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 self.visited[i,j] = 1 if self.alive[i,j] == 0 else 0
@@ -280,7 +294,7 @@ class Grid(object):
 
 class GridMode0(Grid):
 
-    def __init__(self, grid_size=(50,50), p=0.38, zero_thres=0.05, mode='0', seed=None):
+    def __init__(self, grid_size=(50,50), p=0.38, zero_thres=0.05, mode='0', seed=None, np_seed=None):
         self.grid_size = grid_size
         self.probability = p
         self.zero_threshold = zero_thres
@@ -291,6 +305,8 @@ class GridMode0(Grid):
             self.seed = str(uuid.uuid1())
         else:
             self.seed = seed
+
+        self.np_seed = np_seed
         
         self.randomizer = random
         self.randomizer.seed(self.seed)
@@ -300,7 +316,7 @@ class GridMode0(Grid):
         self.visited = np.zeros(self.grid_size)
         self.groups = list()
 
-        self.make_randomized_alive()
+        self.make_randomized_alive(np_seed = np_seed)
         self.states, self.groups = self.get_gcc_membership()
 
 

@@ -68,7 +68,7 @@ class PercolationEnv(gym.Env):
         observations = list()
         return observations
 
-    def __init__(self, gridObject=None, enable_render=True):
+    def __init__(self, gridObject=None, enable_render=True, np_seed=None):
 
         self.viewer = None
         self.enable_render = enable_render
@@ -133,7 +133,7 @@ class PercolationEnv(gym.Env):
 
 class PercolationEnvMode0(PercolationEnv):
 
-    def __init__(self, grid_size=(25, 25), p=0.38, zero_thres=0.05, enable_render=True):
-        pgrid = PercolationGrid(grid_size=grid_size, p=p, zero_thres=zero_thres)
-        super(PercolationEnvMode0, self).__init__(gridObject=pgrid, enable_render=enable_render)
+    def __init__(self, grid_size=(25, 25), p=0.38, zero_thres=0.05, enable_render=True, np_seed=None):
+        pgrid = PercolationGrid(grid_size=grid_size, p=p, zero_thres=zero_thres, np_seed=np_seed, enable_render=enable_render)
+        super(PercolationEnvMode0, self).__init__(gridObject=pgrid, enable_render=enable_render, np_seed=np_seed)
 

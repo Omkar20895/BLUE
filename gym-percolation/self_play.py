@@ -9,7 +9,7 @@ import random
 import numpy as np
 import codecs
 import pickle
-import slackbot
+#import slackbot
 
 import seaborn as sns
 from matplotlib.colors import ListedColormap
@@ -203,7 +203,9 @@ def main():
     args = parser.parse_args()
 
     model_path = args.agent
-    model = pickle.load(open(model_path, 'rb'))
+    model = None
+    if model_path:
+        model = pickle.load(open(model_path, 'rb'))
     rand = True if model is None else False
     file_path = args.file_out
 
@@ -243,7 +245,7 @@ def main():
     #json_data = calc_move_quality(json_data, avg_steps)
     print("Writing to the json file...")
     json.dump(json_data, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
-    slackbot.send_message(["Done with the experiments", "i = "+str(i)])
+    #slackbot.send_message(["Done with the experiments", "i = "+str(i)])
     print(time.time()-start_time)
 
 if __name__ == "__main__":
