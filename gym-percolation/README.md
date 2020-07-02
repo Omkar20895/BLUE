@@ -12,13 +12,19 @@ Repository for CCNR network percolation game BLUE
 Files:
 
 self_play.py: file used to generate experiments
- Arguments:
+
+Arguments:
 
 --agent (optional):  path to the model using which we select actions
+
 --num-games (optional): number of games to be generated
+
 --file-out (required): file to store the generated data
+
 --explore-rate (optional)
+
 --run-parallel (optional) (boolean)
+
 
 
 train.py: used to train a model using the current iteration’s data
@@ -26,7 +32,9 @@ train.py: used to train a model using the current iteration’s data
 Arguments:
 
 --data-path (required): location of the json file on which we train the model
+
 --agent-path (required): file path to save the model
+
 --epochs(optional)
 
 
