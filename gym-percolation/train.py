@@ -17,7 +17,7 @@ import seaborn as sns
 from matplotlib.colors import ListedColormap
 
 from keras.models import Sequential, Model
-from keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, concatenate, BatchNormalization
+from keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, concatenate, BatchNormalization, LeakyReLU
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.initializers import glorot_normal, Zeros, RandomNormal
 
@@ -88,7 +88,8 @@ def get_model():
     input1 = Input(shape=(5, 5, 2))
     kernel = RandomNormal(mean=0.0, stddev=0.05, seed=None)
     
-    conv1 = Conv2D(128, kernel_size=2, activation='relu', kernel_initializer=kernel)(input1)
+    conv1 = Conv2D(128, kernel_size=2, kernel_initializer=kernel)(input1)
+    conv1 = LeakyReLU(alpha=0.1)(conv1)
     conv1 = MaxPooling2D((2,2))(conv1)
     #conv1 = Conv2D(32, kernel_size=2, activation='relu', kernel_initializer=kernel)(conv1)
     #conv1 = MaxPooling2D((2,2))(conv1)
@@ -97,9 +98,12 @@ def get_model():
     #final_model = concatenate([conv1, conv2])
     
     
-    final_model = Dense(256, activation='relu', kernel_initializer=kernel)(conv1)
-    final_model = Dense(128, activation='relu', kernel_initializer=kernel)(final_model)
-    final_model = Dense(32, activation='relu', kernel_initializer=kernel)(final_model)
+    final_model = Dense(256, kernel_initializer=kernel)(conv1)
+    final_model = LeakyReLU(alpha=0.1)(final_model)
+    final_model = Dense(128, kernel_initializer=kernel)(final_model)
+    final_model = LeakyReLU(alpha=0.1)(final_model)
+    final_model = Dense(32,  kernel_initializer=kernel)(final_model)
+    final_model = LeakyReLU(alpha=0.1)(final_model)
     final_model = Dense(1, activation='linear')(final_model)
     
     model = Model(inputs=input1, outputs=final_model)
@@ -138,9 +142,9 @@ def pre_process_data(file_path):
     return X_train, X_val, X_test, Y_train, Y_val, Y_test
 
 
-def train_agent(X_train,X_val, Y_train, Y_val):
+def train_agent(X_train,X_val, Y_train, Y_val, epochs=50):
     model = get_model()
-    model.fit(X_train, Y_train, validation_data=(X_val, Y_val), epochs=70, batch_size=50)
+    model.fit(X_train, Y_train, validation_data=(X_val, Y_val), epochs=epochs, batch_size=50)
 
     return model
 
@@ -173,7 +177,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     X_train, X_val, X_test, Y_train, Y_val, Y_test = pre_process_data(args.data_path)
-    agent = train_agent(X_train, X_val, Y_train, Y_val)
+    agent = train_agent(X_train, X_val, Y_train, Y_val, args.epochs)
     
     test_agent(agent, X_test, Y_test)
 

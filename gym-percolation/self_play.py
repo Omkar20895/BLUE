@@ -9,7 +9,7 @@ import random
 import numpy as np
 import codecs
 import pickle
-#import slackbot
+import slackbot
 
 import seaborn as sns
 from matplotlib.colors import ListedColormap
@@ -43,12 +43,18 @@ def get_model_action(actionSpace, observation, model, exp_rate=0.1):
         if pred[0][0] >= maxi:
             maxi  = pred[0][0]
             return_action = action
-    
+
+    if exp_rate == 0:
+        return return_action, actionSpace
+   
     rand = random.uniform(0, 1)
-    probs = np.array(probs)
+    probs = np.array(probs).astype(float)
     probs = (probs - probs.min())/(probs.max()-probs.min())
     probs = probs/probs.sum()
-    if rand <= exp_rate:
+   
+    if rand <= exp_rate and not True in np.isnan(probs):
+        return_action = np.random.choice(actionSpace)
+    else:
         return_action = np.random.choice(actionSpace, p=probs)
 
     return return_action, actionSpace
@@ -126,7 +132,7 @@ def calc_move_quality(data, avg_steps):
 
     for key, value in data.items():
         steps = len(value)
-        move_quality = avg_steps - steps
+        move_quality = (avg_steps - steps)/avg_steps
         for index in range(steps):
             #move_quality = avg_steps - value[index]["steps_from_win"]
             #if value[index]["steps_from_win"] > avg_steps:
@@ -222,7 +228,8 @@ def main():
         json_data = {}
 
         exp_num = 1
-        for i in range(1, 11):
+        for i in range(1, 2):
+        #for i in range(10, 11):
             temp_json = {}
             parameters["np_seed"] = i
             parameters["exp_num"]  = exp_num
@@ -245,7 +252,7 @@ def main():
     #json_data = calc_move_quality(json_data, avg_steps)
     print("Writing to the json file...")
     json.dump(json_data, codecs.open(file_path, 'w', encoding='utf-8'), separators=(',', ':'), sort_keys=True, indent=4)
-    #slackbot.send_message(["Done with the experiments", "i = "+str(i)])
+    slackbot.send_message(["Done with the experiments", "i = "+str(i)])
     print(time.time()-start_time)
 
 if __name__ == "__main__":
