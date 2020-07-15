@@ -9,17 +9,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--board-size', type=int, default=5)
     parser.add_argument('--network', default='small')
-    parser.add_argument('output_file')
+    parser.add_argument('--output-file')
     args = parser.parse_args()
 
     network = getattr(networks, args.network)
-    input_shape = args.board_size
-    model = network.get_model(input_shape)
+    board_size = args.board_size
+    model = network.get_model(board_size)
 
     new_agent = Agent(model, args.board_size)
-
-    with h5py.File(args.output_file, 'w') as outf:
-        new_agent.serialize(outf) 
+    new_agent.serialize(args.output_file) 
 
 
 if __name__ ==  '__main__':

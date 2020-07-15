@@ -9,8 +9,8 @@ from keras.optimizers import SGD, Adam, RMSprop
 from keras.initializers import glorot_normal, Zeros, RandomNormal
 
 
-def get_model():
-    input1 = Input(shape=(5, 5, 2))
+def get_model(board_size):
+    input1 = Input(shape=(board_size,board_size,2))
     kernel = RandomNormal(mean=0.0, stddev=0.05, seed=None)
 
     conv1 = Conv2D(128, kernel_size=2, activation='relu', kernel_initializer=kernel)(input1)
