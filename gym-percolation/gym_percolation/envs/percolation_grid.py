@@ -9,9 +9,9 @@ import logging
 
 # create logger
 logger = logging.getLogger('game_logger')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.WARNING)
 formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
@@ -393,7 +393,7 @@ class GridMode0(Grid):
         cutoffs = list()
         if not self.is_complete():
             newStates, newcomponents = self.get_gcc_membership()
-            print([len(c) for c in newcomponents])
+            #print([len(c) for c in newcomponents])
 
             for i in range(self.grid_size[0]):
                 for j in range(self.grid_size[1]):
