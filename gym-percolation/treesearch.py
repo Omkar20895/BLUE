@@ -1,21 +1,18 @@
-
+import numpy as np
 import gym
-import argparse
-from agent import Agent,ExperimentLogger,load_agent
-
 from itertools import product as iterproduct
-from copy import deepcopy
 
+def deepcopy(old_env):
 
-env = gym.make("gym_percolation:Percolation-mode0-v0", grid_size=(args.board_size,args.board_size), p=args.p, np_seed=seed, 
+    env = gym.make("gym_percolation:Percolation-mode0-v0", grid_size=old_env.state.shape, 
             enable_render=False)        
-observation = env.reset()
-env.seed()
-agent.logger.update_metadata(np_seed=seed, game_number=game_no)
-while len(env.action_space)>0:
-    env = agent.select_move(env)
-agent.flush_logger()
-
+        
+    env.grid_view.grid.states = old_env.grid_view.grid.states
+    env.grid_view.grid.alive = old_env.grid_view.grid.alive
+    env.grid_view.grid.visited = old_env.grid_view.grid.visited
+    env.grid_view.grid.groups = old_env.grid_view.grid.groups
+    env.state = env.grid_view.grid.states.copy()
+    return env
 
 class GameTreeNode(object):
 
@@ -23,30 +20,34 @@ class GameTreeNode(object):
         self.children = []
         self.parent = parent
         self.moves_to_end = np.inf
+        self.action = action
         self.game_state = deepcopy(game_state)
-        self.apply_action(action)
+        self.full_tree = False
+        if self.action is not None:
+            self.apply_action(action)
 
     def apply_action(self,action):
         self.game_state.step(action)
+        #print(len(self.game_state.action_space))
         if len(self.game_state.action_space) == 0:
+            print(self.game_state.state)
             self.moves_to_end = 0
-        current_parent = self.parent
-        current_child = self
-        while current_parent is not None:
-            current_parent.moves_to_end = current_child.moves_to_end + 1
-            current_child = current_parent
-            current_parent = current_parent.parent
+            current_parent = self.parent
+            current_child = self
+            while current_parent is not None:
+                print(current_child.moves_to_end)
+                current_parent.moves_to_end = min(current_parent.moves_to_end,current_child.moves_to_end + 1)
+                current_child = current_parent
+                current_parent = current_parent.parent
             
-
-
     def populate_children(self):
         for action in self.game_state.action_space:
-            self.children.append(GameTreeNode(self.game_state, self.action, self))
+            self.children.append(GameTreeNode(self.game_state, action, self))
 
     def grow_tree(self):
         queue = [self]
-        while np.isinf(self.moves_to_end):
-            front = queue.pop()
+        while queue:#(self.full_tree and queue) or (not self.full_tree and np.isinf(self.moves_to_end)):
+            front = queue.pop(0)
             front.populate_children()
             queue += front.children
 

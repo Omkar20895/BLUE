@@ -378,8 +378,17 @@ class GridMode0(Grid):
 
     def fill_affected(self):
         newStates, newComponents = self.get_gcc_membership()
+                    
+        #print([len(c) for c in newcomponents])
+        cutoffs = list()
 
-        return        
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                if self.states[i,j] == self.STATES['Empty'] and newStates[i,j] != self.STATES['Empty']:
+                    self.states[i,j] = newStates[i,j]
+                    cutoffs.append((i,j))
+        
+        return  cutoffs
 
     def register_move(self, x, y):
         if self.states[x,y] != self.STATES['Empty']:
@@ -390,18 +399,9 @@ class GridMode0(Grid):
         self.alive[x,y] = 0
         self.visited[x,y] = 1
 
-        cutoffs = list()
         if not self.is_complete():
-            newStates, newcomponents = self.get_gcc_membership()
-            #print([len(c) for c in newcomponents])
-
-            for i in range(self.grid_size[0]):
-                for j in range(self.grid_size[1]):
-                    if self.states[i,j] == self.STATES['Empty'] and newStates[i,j] != self.STATES['Empty']:
-                        self.states[i,j] = newStates[i,j]
-                        cutoffs.append((i,j))
-        
-        if self.is_complete():
+            cutoffs = self.fill_affected()
+        else:
             logger.info('Completed!')
     
         return cutoffs
