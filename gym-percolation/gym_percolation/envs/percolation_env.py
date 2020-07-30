@@ -102,9 +102,9 @@ class PercolationEnv(gym.Env):
         return self.grid_view.game_over
 
     def step(self, action):
-        self.state = self.grid_view.grid.states.copy()
+        #self.state = self.grid_view.grid.states.copy()
         self.grid_view.grid.register_move(action['x'], action['y'])
-
+        self.state = self.grid_view.grid.states.copy()
         reward = 0
         done = self.is_game_over()
         info = {}
@@ -123,6 +123,14 @@ class PercolationEnv(gym.Env):
         self.steps_beyond_done = None
         self.done = False
         return self.state
+    
+    def load(self,state):
+        self.grid_view.restart()
+        self.grid_view.grid.load(state)
+        self.grid_view.grid.fill_affected()
+        self.state = self.grid_view.grid.states.copy()
+        self.steps_beyond_done = None
+        self.done = False
  
     def render(self, mode="human", close=False):
         if close:

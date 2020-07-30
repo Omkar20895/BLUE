@@ -211,6 +211,12 @@ class Grid(object):
         self.groups = list()
         self.make_randomized_alive(np_seed = self.np_seed)
 
+    def load(self,states):
+        self.states = states
+        self.alive = (self.states == self.STATES["Empty"]).astype(int)
+        self.states, self.groups = self.get_gcc_membership()
+
+
     def make_all_alive(self):
         self.alive = np.ones(self.grid_size)
         self.states = np.ones(self.grid_size) * self.STATES['Empty']
@@ -233,11 +239,11 @@ class Grid(object):
                 #self.alive[i,j] = 0 if self.randomizer.random() < p else 1
                 #self.states[i,j] = self.STATES['Empty'] if self.alive[i,j] else self.STATES['Initially-Attacked']
                 self.states[i,j] = self.STATES['Empty'] if zeros[i,j] else self.STATES['Initially-Attacked']
-        self.get_gcc_membership()
+
         logger.info('Grid with size {} created'.format(self.grid_size))
 
     def get_gcc_membership(self):
-        
+        raise DeprecationWarning("Calling get_gcc_membership of parent object, undefined behavior")
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 self.visited[i,j] = 1 if self.alive[i,j] == 0 else 0
@@ -395,12 +401,14 @@ class GridMode0(Grid):
             return []
 
         logger.info('Attack on site ({}, {})'.format(x,y))
+        premove_alive = self.alive.sum()
         self.states[x,y] = self.STATES['Attacked']
         self.alive[x,y] = 0
         self.visited[x,y] = 1
+        cutoffs = self.fill_affected()
 
         if not self.is_complete():
-            cutoffs = self.fill_affected()
+            logger.info(f"Alive nodes dropped from {premove_alive} to {self.alive.sum()}")
         else:
             logger.info('Completed!')
     
