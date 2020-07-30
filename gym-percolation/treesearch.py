@@ -94,6 +94,9 @@ class GameTreeNode(object):
     
     def generate_training_data(self):
         good,bad=self.split_children_good_bad()
-        Y_good = [c.action for c in good]
-        Y_bad = [c.action for c in bad]
-        return self.game_state.state.tolist(),Y_good,Y_bad
+        if good or bad:
+            Y_good = [c.action for c in good]
+            Y_bad = [c.action for c in bad]
+            return self.game_state.state.tolist(),Y_good,Y_bad
+        else:
+            return [],[],[]
