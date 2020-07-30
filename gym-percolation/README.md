@@ -36,11 +36,10 @@ In the first iteration we use 10 random seeds to generate 10 specific board game
 
 We pre-process the dataset before using it to train the neural network by calculating the average number of steps taken to win among all the game experiments, referred to as **par** of the dataset. For each game experiment we calculate reward using the formula (average_steps-present_steps)/average_steps, this type of reward system gives a higher reward to the games that win the game in lesser number of steps than the par and lower reward otherwise. We assign all the action, boardstate pairs in a game experiment with this reward. This is our mechanism of penalizing and rewarding game experiments that are above(greater than) and below(lesser than) par respectively. 
 
-The following is the structure of the CNN:
 
 <p align="center">
   <img width="350" height="550" src="https://i.imgur.com/MWCB2rz.png"><br>
-  The following is the structure of the CNN:
+  Figure 1: Structure of the CNN used for training the agent
 </p>
 
 
@@ -48,13 +47,13 @@ In the subsequent iterations we use the same 10 random seeds to generate board s
 
 
 
-The following python code show the training regime over 10 iterations: 
+The following python code show the training regime over 18 iterations: 
 
 ```python
 import os
 
 os.makedirs("./omkar_experiments")
-for index in range(1, 11):
+for index in range(1, 19):
     os.makedirs("./omkar_experiments/iteration"+str(index))
     if index == 1:
         os.system("python3 self_play.py --file-out './omkar_experiments/iteration"+str(index)+"/data.json'")
@@ -64,67 +63,63 @@ for index in range(1, 11):
     os.system('python3 train.py --data-path "./omkar_experiments/iteration'+str(index)+'/data.json" --agent-path "./omkar_experiments/iteration'+str(index)+'/model.sav"')
 
 
-os.system('python3 plot.py --data-path "./omkar_experiments" --iterations 10')
+os.system('python3 plot.py --data-path "./omkar_experiments" --iterations 18')
 ```
 
 The following were the results of the experiments: 
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/Od4xhoa.png"><br>
-  Seed 1
+  <img width="1000" height="350" src="https://i.imgur.com/Od4xhoa.png"><br>
+  Seed 1:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/uHXdApG.png"><br>
-  Seed 2
+  <img width="1000" height="350" src="https://i.imgur.com/uHXdApG.png"><br>
+  Seed 2:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/G2l0ysA.png"><br>
-  Seed 3
+  <img width="1000" height="350" src="https://i.imgur.com/G2l0ysA.png"><br>
+  Seed 3:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/QShEIf0.png"><br>
-  Seed 4
+  <img width="1000" height="350" src="https://i.imgur.com/QShEIf0.png"><br>
+  Seed 4:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/RtlvPg1.png"><br>
-  Seed 5
+  <img width="1000" height="350" src="https://i.imgur.com/RtlvPg1.png"><br>
+  Seed 5:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/nMVhakb.png"><br>
-  Seed 6
+  <img width="1000" height="350" src="https://i.imgur.com/nMVhakb.png"><br>
+  Seed 6:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/ZmKUDga.png"><br>
-  Seed 7
+  <img width="1000" height="350" src="https://i.imgur.com/ZmKUDga.png"><br>
+  Seed 7:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/XMucDEP.png"><br>
-  Seed 8
+  <img width="1000" height="350" src="https://i.imgur.com/XMucDEP.png"><br>
+  Seed 8:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/dwaCHWG.png"><br>
-  Seed 9
+  <img width="1000" height="350" src="https://i.imgur.com/dwaCHWG.png"><br>
+  Seed 9:
 </p>
 
 <p align="center">
-  <img width="800" height="550" src="https://i.imgur.com/RRt8RIX.png"><br>
-  Seed 10
+  <img width="1000" height="350" src="https://i.imgur.com/RRt8RIX.png"><br>
+  Seed 10:
 </p>
 
 
 As we can see from the graphs, we got mixed results and the average steps to win was not continuosly decreasing. We are currently working on a new approach called Policy Gradient learning and the results will be upadated here shortly.
-
-
-
-
 
 ## Helpful resources
 
