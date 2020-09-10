@@ -142,7 +142,7 @@ def pre_process_data(file_path):
     return X_train, X_val, X_test, Y_train, Y_val, Y_test
 
 
-def train_agent(X_train,X_val, Y_train, Y_val, epochs=50):
+def train_agent(X_train, X_val, Y_train, Y_val, epochs=50):
     model = get_model()
     model.fit(X_train, Y_train, validation_data=(X_val, Y_val), epochs=epochs, batch_size=50)
 
