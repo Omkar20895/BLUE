@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import normalize
 from sklearn.utils import shuffle
-from sklearn.metrics import confusion_matrix, roc_curve, mean_squared_error
+from sklearn.metrics import confusion_matrix, roc_curve, mean_squared_error, recall_score, precision_score
 import matplotlib.pyplot as plt
 
 import seaborn as sns
@@ -226,6 +226,12 @@ def train_policy_gradient_agent(X_train,X_val, Y_train, Y_val, epochs=50, networ
 def test_agent(agent, X_test, Y_test):
     predictions = agent.predict(X_test)
 
+    for index in range(len(predictions)):
+        top_k = sum(Y_test[index])
+        indices = predictions[index].argsort()[::-1][:top_k]
+        predictions[index] = np.zeros_like(predictions[index])
+        predictions[index][indices] = 1
+
     # metrics for multi-class classification 
     cca = tf.keras.metrics.CategoricalAccuracy()
     cca.update_state(predictions, Y_test)
@@ -241,6 +247,8 @@ def test_agent(agent, X_test, Y_test):
     #print("Categorical Cross Entropy Loss: "+str(bce(predictions, Y_test).numpy()))
     #print("Categorical Accuracy: "+str(acc.result().numpy()))
     print("Accuracy: "+str(acc.result().numpy()))
+    print("Precision: "+str(precision_score(Y_test, predictions, average=None)))
+    print("Recall: "+str(recall_score(Y_test, predictions, average=None)))
 
     return
     
