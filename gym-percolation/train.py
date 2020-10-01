@@ -6,6 +6,8 @@ import pickle
 import numpy as np
 import pandas as pd
 import argparse
+import h5py
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import normalize
@@ -116,13 +118,9 @@ def get_model_data_policy_gradient(file_path):
     except Exception as e:
         print(e)
 
-    X1_train, Y_train = consolidate_train_data(X1_train, Y_train)
-    X = pd.DataFrame({'X':X1_train, 'Y':Y_train})
-    print(X.shape)
-    X = shuffle(X)
-    X, Y_train = X["X"], X["Y"]
+    X, Y = consolidate_train_data(X1_train, Y_train)
 
-    return X, list(Y_train)
+    return pd.Series(X), pd.Series(Y)
 
 def get_model_stacked():
 
@@ -180,13 +178,15 @@ def pre_process_data_policy_gradient(file_path):
 
     X, Y = get_model_data_policy_gradient(file_path)
 
+    """
     new_df = pd.concat([X, pd.Series(Y)], axis = 1)
     new_df.columns = ['X', 'Y']
 
     X2 = new_df.X
     Y2 = new_df.Y
-    
-    X_train, X_val, Y_train, Y_val = train_test_split(X2, Y2, test_size=0.3)
+    """    
+
+    X_train, X_val, Y_train, Y_val = train_test_split(X, Y, test_size=0.3)
     X_val, X_test, Y_val, Y_test = train_test_split(X_val, Y_val, test_size=0.5)
     
     X_train = np.reshape(X_train.tolist(), (X_train.shape[0], 5, 5, 4))
@@ -196,7 +196,26 @@ def pre_process_data_policy_gradient(file_path):
     Y_train = np.array(Y_train.to_list())
     Y_val = np.array(Y_val.to_list())
     Y_test  = np.array(Y_test.to_list())
-    
+
+    train_data_path = ("/").join(file_path.split("/")[:-1]) + "/processed_train_data.h5"
+    train_store = h5py.File(train_data_path, 'w')
+    train_store.create_dataset('input', data=X_train)
+    train_store.create_dataset('target', data=Y_train)
+
+    val_data_path = ("/").join(file_path.split("/")[:-1]) + "/processed_val_data.h5"
+    val_store = h5py.File(val_data_path, 'w')
+    val_store.create_dataset('input', data=X_val)
+    val_store.create_dataset('target', data=Y_val)
+
+    test_data_path = ("/").join(file_path.split("/")[:-1]) + "/processed_test_data.h5"
+    test_store = h5py.File(test_data_path, 'w')
+    test_store.create_dataset('input', data=X_test)
+    test_store.create_dataset('target', data=Y_test)
+
+    train_store.close()
+    val_store.close()
+    test_store.close()
+
     return X_train, X_val, X_test, Y_train, Y_val, Y_test
 
 def train_agent(X_train,X_val, Y_train, Y_val, epochs=50):
