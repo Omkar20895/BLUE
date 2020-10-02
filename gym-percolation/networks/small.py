@@ -36,17 +36,34 @@ def get_model():
     print(model.summary())
     return model
 #"""
+
+def custom_accuracy(yTrue, yPred):
+    yTrue = yTrue.numpy()
+    yPred = yPred.numpy()
+    right_preds = 0
+    for index in range(len(yPred)):
+        top_k = int(sum(yTrue[index]))
+        top_k_true = yTrue[index].argsort()[::-1][:top_k]
+        top_k_pred = yPred[index].argsort()[::-1][:top_k]
+        for ind in top_k_pred:
+            if ind in top_k_true:
+                right_preds += 1
+                break
+
+    return right_preds/len(yTrue)
+
 def get_policy_gradient_model():
     input1 = Input(shape=(5, 5, 4))
     kernel = RandomNormal(mean=0.0, stddev=0.05, seed=None)
 
     conv1 = Conv2D(64, activation='relu', kernel_size=2, kernel_initializer=kernel)(input1)
     #conv1 = MaxPooling2D((2,2))(conv1)
-    conv1 = Dropout(0.5)(conv1)
+    #conv1 = Dropout(0.2)(conv1)
     conv1 = Flatten()(conv1)
 
     #final_model = Dense(256, activation='relu', kernel_initializer=kernel)(conv1)
     final_model = Dense(128, activation='relu', kernel_initializer=kernel)(conv1)
+    #final_model = Dropout(0.2)(final_model)
     final_model = Dense(64,  activation='relu', kernel_initializer=kernel)(final_model)
     final_model = Dense(25, activation='sigmoid')(final_model)
 
@@ -55,7 +72,7 @@ def get_policy_gradient_model():
     opti = Adam(lr=0.001, clipnorm=1)
     #opti = Adagrad(learning_rate=0.001, initial_accumulator_value=0.1, epsilon=1e-07, name="Adagrad")
     #model.compile(optimizer=opti, loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-    model.compile(optimizer=opti, loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=opti, loss='binary_crossentropy', metrics=['accuracy', custom_accuracy], run_eagerly=True)
 
     print(model.summary())
     return model
