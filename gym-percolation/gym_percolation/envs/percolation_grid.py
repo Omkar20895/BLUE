@@ -259,7 +259,6 @@ class Grid(object):
 
     def run_bfs(self, i,j):
         currentGroup = list()
-
         queue = [(i,j)]
         self.visited[i,j] = 1
         while len(queue) > 0:
@@ -326,12 +325,11 @@ class GridMode0(Grid):
         self.states, self.groups = self.get_gcc_membership()
 
 
-    def run_bfs(self, x, y):
+    def run_bfs(self, i, j):
         currentGroup = list()
-        queue = [(x,y)]
-
+        queue = [(i,j)]
         availableCells = np.array(self.visited)
-        availableCells[x,y] = 1
+        availableCells[i,j] = 1
         while(len(queue)) > 0:
             xc, yc = queue.pop()
             currentGroup.append((xc, yc))
@@ -378,10 +376,33 @@ class GridMode0(Grid):
             switch_to_state = self.STATES['Empty'] if len(components[0]) > self.maximum_blue_size else self.STATES['Affected']
             for x, y in components[0]:
                 newStates[x,y] = switch_to_state
+        elif self.MODES[self.game_mode] == 3:
+            for component in components:
+                i,j = component[0]
+                if self.states[i,j] == self.STATES["Empty"]:
+                    switch_to_state = self.STATES['Empty'] if self.check_up_down_left_right(component) else self.STATES["Affected"]                        
 
 
         return newStates, components
 
+    def check_up_down_left_right(self,component):
+        up_down_left_right = dict(up=False,down=False,left=False,right=False)
+        for i,j in component:
+            if i == 0:
+                up_down_left_right["up"] = True
+            if j == 0:
+                up_down_left_right["left"] = True
+            if i == self.L-1:
+                up_down_left_right["down"] = True
+            if j == self.L-1:
+                up_down_left_right["right"] = True
+        if self.mode_3_criterion == "updown":
+            return up_down_left_right["up"] & up_down_left_right["down"]
+        elif self.mode_3_criterion == "leftright":
+            return up_down_left_right["left"] & up_down_left_right["right"]
+        elif self.mode_3_criterion == "updownleftright":
+            return up_down_left_right["left"] & up_down_left_right["right"] & up_down_left_right["up"] & up_down_left_right["down"]
+            
     def fill_affected(self):
         newStates, newComponents = self.get_gcc_membership()
                     
