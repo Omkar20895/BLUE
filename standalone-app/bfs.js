@@ -1,9 +1,9 @@
 
 
 
-L = 50;
-var p = 0.2;
-mode = 3;
+L = 20;
+var p = 0.3;
+mode = 2;
 zero_thresh = 0.05;
 
 
@@ -303,7 +303,7 @@ BattlePerc.prototype.generate_status_vector_from_groups = function(){
                 v = this.groups[i][j];
                 this.status[v] = 0;
             }
-         i++;   
+         //i++;   
         }
 }
 
