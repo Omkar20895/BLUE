@@ -20,12 +20,12 @@ logger.addHandler(ch)
 class PercolationGrid:
 
     def __init__(self, game_name="Percolation Grid", seed_value=None, p=0.38, zero_thres=0.05,
-                 grid_size=(30, 30), screen_size=(600, 600), enable_render=True, np_seed=None):
+                 grid_size=(30, 30), screen_size=(600, 600), enable_render=True, np_seed=None,mode="3"):
 
         self.__game_over = False
         self.__enable_render = enable_render
 
-        self.__grid = GridMode0(grid_size, p=p, zero_thres=zero_thres, seed=seed_value, np_seed=np_seed) # Update P value
+        self.__grid = GridMode0(grid_size, p=p, zero_thres=zero_thres, seed=seed_value, mode=mode,np_seed=np_seed) # Update P value
 
         self.grid_size = self.__grid.grid_size
         if self.__enable_render is True:
@@ -55,9 +55,10 @@ class PercolationGrid:
 
     def update(self, mode="human"):
         try:
-            img_output = self.__view_update(mode)
+            #img_output = self.__view_update(mode)
             self.__controller_update()
-
+            img_output = self.__view_update(mode)
+            
             if self.__grid.is_complete():
                 self.__game_over = True
 
@@ -95,7 +96,7 @@ class PercolationGrid:
                     self.quit_game()
 
     def __view_update(self, mode="human"):
-        if not self.__game_over:
+        if not self.__game_over:# or True:
             # update visual components
             self.__draw_grid()
 
@@ -179,6 +180,8 @@ class Grid(object):
         '0': 0,
         '1': 1,
         '2': 2,
+        '3': 3,
+        
     }
 
     def __init__(self, grid_size=(50,50), p=0.38, zero_thres=0.05, mode='0', seed=None, np_seed=None):
@@ -305,6 +308,7 @@ class GridMode0(Grid):
         self.zero_threshold = zero_thres
         self.game_mode = mode
         self.maximum_blue_size = 0
+        self.mode_3_criterion = "updown"
 
         if seed == None:
             self.seed = str(uuid.uuid1())
@@ -379,22 +383,26 @@ class GridMode0(Grid):
         elif self.MODES[self.game_mode] == 3:
             for component in components:
                 i,j = component[0]
-                if self.states[i,j] == self.STATES["Empty"]:
-                    switch_to_state = self.STATES['Empty'] if self.check_up_down_left_right(component) else self.STATES["Affected"]                        
+                if self.states[i,j] == self.STATES["Empty"] and self.check_up_down_left_right(component):
+                    
+                    for x,y in component:
+                        newStates[x,y] = self.STATES["Empty"]
+                    #switch_to_state = self.STATES['Empty'] if self.check_up_down_left_right(component) else self.STATES["Affected"]                        
 
 
         return newStates, components
-
+    
     def check_up_down_left_right(self,component):
         up_down_left_right = dict(up=False,down=False,left=False,right=False)
+        L=self.grid_size[0]
         for i,j in component:
-            if i == 0:
-                up_down_left_right["up"] = True
             if j == 0:
+                up_down_left_right["up"] = True
+            if i == 0:
                 up_down_left_right["left"] = True
-            if i == self.L-1:
+            if j == L-1:
                 up_down_left_right["down"] = True
-            if j == self.L-1:
+            if i == L-1:
                 up_down_left_right["right"] = True
         if self.mode_3_criterion == "updown":
             return up_down_left_right["up"] & up_down_left_right["down"]
@@ -402,6 +410,8 @@ class GridMode0(Grid):
             return up_down_left_right["left"] & up_down_left_right["right"]
         elif self.mode_3_criterion == "updownleftright":
             return up_down_left_right["left"] & up_down_left_right["right"] & up_down_left_right["up"] & up_down_left_right["down"]
+        else:
+            print(up_down_left_right)
             
     def fill_affected(self):
         newStates, newComponents = self.get_gcc_membership()
@@ -439,7 +449,9 @@ class GridMode0(Grid):
 
 if __name__ == "__main__":
 
-    grid = PercolationGrid(screen_size= (750, 750), grid_size=(15,15))
-    while True:
+    grid = PercolationGrid(p=0.25, screen_size= (750, 750), grid_size=(35,35))
+    while True :
         grid.update()
+        if grid.game_over:
+            break
     input("Enter any key to quit.")
